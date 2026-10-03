@@ -12,6 +12,9 @@ Users can browse products, manage a cart, register and log in, save addresses, k
 - User registration and login (token authentication)
 - Checkout page (address, phone, payment method)
 - Order history for each user
+- Saved addresses
+- Wishlist
+- Online payment with Razorpay (test mode)
 
 ## Tech Stack
 - **Frontend:** React, Vite, Tailwind CSS, React Router
