@@ -3,7 +3,7 @@
 A full stack e-commerce web app built with **Django REST Framework** and **React (Vite)**. 
 Users can browse products, manage a cart, register and log in, save addresses, keep a wishlist, place orders and pay online with **Razorpay (test mode)**.
 
-**GitHub:** [https://github.com/YOUR-USERNAME/YOUR-REPO](https://github.com/Dhirubhai06/shopease-ecommerce)
+**GitHub:** (https://github.com/Dhirubhai06/shopease-ecommerce)
 **Live demo:** coming soon
 
 ## Features
