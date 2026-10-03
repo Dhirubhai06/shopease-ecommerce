@@ -30,6 +30,10 @@ Users can browse products, manage a cart, register and log in, save addresses, k
 |-----------|
 | ![Orders](screenshots/orders.png) |
 
+| Login / Register |
+|------------------|
+| ![Login](screenshots/loginregister.png) |
+
 ## Run locally
 
 ### Backend
