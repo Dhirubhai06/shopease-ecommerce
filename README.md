@@ -19,6 +19,9 @@ Users can browse products, manage a cart, register and log in, save addresses, k
 ## Tech Stack
 - **Frontend:** React, Vite, Tailwind CSS, React Router
 - **Backend:** Django, Django REST Framework
+- Saved addresses
+- Wishlist
+- Online payment with Razorpay (test mode)
 
 ## Screenshots
 | Home | Product Details |
