@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react"; // NAYA
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import HeartButton from "./HeartButton";
@@ -5,6 +6,14 @@ import HeartButton from "./HeartButton";
 function ProductCard({ product }) {
   const BASEURL = import.meta.env.VITE_DJANGO_BASE_URL || "";
   const { addToCart } = useCart();
+  const [added, setAdded] = useState(false); // NAYA
+
+  // NAYA: 1.5 second baad button wapas normal
+  useEffect(() => {
+    if (!added) return;
+    const timer = setTimeout(() => setAdded(false), 1500);
+    return () => clearTimeout(timer);
+  }, [added]);
 
   const getProductImageUrl = (image) => {
     if (!image) return "https://placehold.co/600x400?text=No+Image";
@@ -17,12 +26,11 @@ function ProductCard({ product }) {
   const handleAddToCart = (event) => {
     event.preventDefault();
     addToCart(product);
+    setAdded(true); // NAYA
   };
 
   return (
-    // NAYA: "relative" class
     <div className="relative bg-slate-900 rounded-xl shadow-md hover:shadow-lg transition-shadow p-4 border border-slate-800">
-      {/* NAYA: heart button */}
       <HeartButton productId={product.id} />
 
       <Link to={`/product/${product.id}`} className="block">
@@ -42,11 +50,14 @@ function ProductCard({ product }) {
       <p className="text-slate-300 text-sm line-clamp-2 mb-3">{product.description}</p>
       <div className="flex items-center justify-between gap-3">
         <p className="text-white font-semibold">₹{product.price}</p>
+        {/* BADLA: button ka colour aur text added par depend karta hai */}
         <button
           onClick={handleAddToCart}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+          aria-live="polite"
+          className={`text-white px-4 py-2 rounded-lg transition ${added ? "bg-green-600" : "bg-blue-600 hover:bg-blue-700"
+            }`}
         >
-          Add to Cart
+          {added ? "Added ✓" : "Add to Cart"}
         </button>
       </div>
     </div>

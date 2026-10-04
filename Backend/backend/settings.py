@@ -171,3 +171,11 @@ DEFAULT_FROM_EMAIL = "ShopEase <noreply@shopease.local>"
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_test_TjQmoR1aw2cHFR")
 RAZORPAY_KEY_SECRET = os.getenv(
     "RAZORPAY_KEY_SECRET", "tKQ4x3326wXVoy7g6jlE62KV")
+
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", ".trycloudflare.com"]
+
+# agar django-cors-headers use kar rahe ho
+CORS_ALLOWED_ORIGIN_REGEXES = [r"^https://.*\.trycloudflare\.com$"]
+
+# tunnel ke peeche https samjhe (image URLs https bane)
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
