@@ -9,7 +9,7 @@ function ProductDetails() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const [added, setAdded] = useState(false);
   const getProductImageUrl = (image) => {
     if (!image) return "https://placehold.co/600x400?text=No+Image";
     if (image.startsWith("http://") || image.startsWith("https://")) return image;
@@ -39,6 +39,8 @@ function ProductDetails() {
   const handleAddToCart = () => {
     if (product) {
       addToCart(product);
+      setAdded(true);
+      setTimeout(() => setAdded(false), 1500);
     }
   };
 
@@ -75,9 +77,10 @@ function ProductDetails() {
           <p className="text-2xl font-semibold text-gray-800 mb-6">₹{product.price}</p>
           <button
             onClick={handleAddToCart}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+            className={`px-6 py-2 rounded-lg text-white transition ${added ? "bg-green-600" : "bg-blue-600 hover:bg-blue-700"
+              }`}
           >
-            Add to Cart
+            {added ? "Added ✓" : "Add to Cart"}
           </button>
         </div>
       </div>

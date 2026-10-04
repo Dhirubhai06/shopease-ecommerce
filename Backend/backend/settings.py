@@ -179,3 +179,5 @@ CORS_ALLOWED_ORIGIN_REGEXES = [r"^https://.*\.trycloudflare\.com$"]
 
 # tunnel ke peeche https samjhe (image URLs https bane)
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+CSRF_TRUSTED_ORIGINS = ["https://*.trycloudflare.com"]
