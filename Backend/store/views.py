@@ -1,3 +1,4 @@
+from django.db.models import Q
 import razorpay
 from django.conf import settings
 from .emails import send_order_confirmation
@@ -33,6 +34,29 @@ def home(request):
 @api_view(['GET'])
 def get_products(request):
     products = Product.objects.all()
+
+    # ?search=cooker  (name ya description me dhundhe)
+    search = request.query_params.get('search', '').strip()
+    if search:
+        products = products.filter(
+            Q(name__icontains=search) | Q(description__icontains=search)
+        )
+
+    # ?category=2
+    category = request.query_params.get('category', '')
+    if category.isdigit():
+        products = products.filter(category_id=int(category))
+
+    # ?sort=price_asc | price_desc | newest
+    sort_options = {
+        'price_asc': 'price',
+        'price_desc': '-price',
+        'newest': '-id',
+    }
+    sort = request.query_params.get('sort')
+    if sort in sort_options:
+        products = products.order_by(sort_options[sort])
+
     serializer = ProductSerializer(products, many=True)
     return Response(serializer.data)
 
