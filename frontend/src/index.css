@@ -93,3 +93,19 @@ html.dark ::placeholder {
 html.dark .shadow-md {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
+
+html.dark .bg-red-100 {
+    background-color: #7f1d1d;
+}
+
+html.dark .text-red-800 {
+    color: #fecaca;
+}
+
+html.dark .bg-green-100 {
+    background-color: #14532d;
+}
+
+html.dark .text-green-800 {
+    color: #bbf7d0;
+}

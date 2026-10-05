@@ -14,7 +14,8 @@ function Orders() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-
+    const [cancellingId, setCancellingId] = useState(null);
+    const [actionError, setActionError] = useState("");
     useEffect(() => {
         if (!token) return;
         fetch(`${BASE_URL}/api/orders/`, {
@@ -34,7 +35,24 @@ function Orders() {
         if (image.startsWith("http")) return image;
         return `${BASE_URL.replace(/\/+$/, "")}${image.startsWith("/") ? image : `/${image}`}`;
     };
-
+    const handleCancel = async (orderId) => {
+        if (!window.confirm(`Cancel order #${orderId}?`)) return;
+        setActionError("");
+        setCancellingId(orderId);
+        try {
+            const res = await fetch(`${BASE_URL}/api/orders/${orderId}/cancel/`, {
+                method: "POST",
+                headers: { Authorization: `Token ${token}` },
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || data.detail || "Unable to cancel order");
+            setOrders((prev) => prev.map((o) => (o.id === orderId ? data : o)));
+        } catch (err) {
+            setActionError(err.message);
+        } finally {
+            setCancellingId(null);
+        }
+    };
     if (!token) return <Navigate to="/login" />;
     if (loading) return <p className="text-center mt-10">Loading...</p>;
     if (error) return <p className="text-center mt-10 text-red-500">{error}</p>;
@@ -50,6 +68,8 @@ function Orders() {
                 </div>
             )}
 
+            {actionError && <p className="text-red-500 text-sm">{actionError}</p>}
+
             {orders.map((order) => (
                 <div key={order.id} className="bg-white rounded-xl shadow-md p-5">
                     <div className="flex justify-between items-start">
@@ -61,7 +81,10 @@ function Orders() {
                         </div>
                         <div className="text-right">
                             <p className="font-bold text-gray-800">₹{Number(order.total_amount).toFixed(2)}</p>
-                            <span className="inline-block mt-1 text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 capitalize">
+                            <span className={`inline-block mt-1 text-xs px-2 py-1 rounded-full capitalize ${order.status === "cancelled"
+                                ? "bg-red-100 text-red-800"
+                                : "bg-yellow-100 text-yellow-800"
+                                }`}>
                                 {order.status}
                             </span>
                             {order.is_paid && (
@@ -97,6 +120,15 @@ function Orders() {
                         <p><span className="font-medium">Address:</span> {order.shipping_address}</p>
                         <p><span className="font-medium">Phone:</span> {order.phone}</p>
                         <p><span className="font-medium">Payment:</span> {PAYMENT_LABELS[order.payment_method] || order.payment_method}</p>
+                        {order.status === "pending" && !order.is_paid && (
+                            <button
+                                onClick={() => handleCancel(order.id)}
+                                disabled={cancellingId === order.id}
+                                className="mt-3 text-sm text-red-600 hover:text-red-700 disabled:opacity-60"
+                            >
+                                {cancellingId === order.id ? "Cancelling..." : "Cancel order"}
+                            </button>
+                        )}
                     </div>
                 </div>
             ))}

@@ -305,3 +305,62 @@ class PaymentTests(APITestCase):
         response = self.client.post(
             "/api/payments/create/", {"order_id": self.order.id})
         self.assertEqual(response.status_code, 404)
+
+# ---------- cancel order ----------
+
+
+@override_settings(RAZORPAY_KEY_ID="rzp_test_dummy", RAZORPAY_KEY_SECRET="dummy_secret")
+class CancelOrderTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            "buyer", "b@example.com", "Pass12345")
+        self.other = User.objects.create_user(
+            "other", "o@example.com", "Pass12345")
+        self.product = make_product(price="500.00", stock=5)
+        login(self.client, self.user)
+        response = self.client.post("/api/orders/create/", {
+            "address": "Jaipur", "phone": "9876543210", "payment_method": "cod",
+            "items": [{"id": self.product.id, "quantity": 2}],
+        }, format="json")
+        self.order_id = response.data["id"]
+
+    def stock(self):
+        self.product.refresh_from_db()
+        return self.product.stock
+
+    def test_cancel_restores_stock(self):
+        self.assertEqual(self.stock(), 3)
+        response = self.client.post(f"/api/orders/{self.order_id}/cancel/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status"], "cancelled")
+        self.assertEqual(self.stock(), 5)
+
+    def test_cannot_cancel_twice(self):
+        self.client.post(f"/api/orders/{self.order_id}/cancel/")
+        again = self.client.post(f"/api/orders/{self.order_id}/cancel/")
+        self.assertEqual(again.status_code, 400)
+        self.assertEqual(self.stock(), 5)            # stock dobara nahi badha
+
+    def test_cannot_cancel_paid_order(self):
+        Order.objects.filter(id=self.order_id).update(is_paid=True)
+        response = self.client.post(f"/api/orders/{self.order_id}/cancel/")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(self.stock(), 3)
+
+    def test_other_user_cannot_cancel(self):
+        login(self.client, self.other)
+        response = self.client.post(f"/api/orders/{self.order_id}/cancel/")
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(self.stock(), 3)
+
+    def test_cancel_requires_login(self):
+        self.client.credentials()
+        response = self.client.post(f"/api/orders/{self.order_id}/cancel/")
+        self.assertEqual(response.status_code, 401)
+
+    def test_cannot_start_payment_for_cancelled_order(self):
+        self.client.post(f"/api/orders/{self.order_id}/cancel/")
+        Order.objects.filter(id=self.order_id).update(payment_method="upi")
+        response = self.client.post(
+            "/api/payments/create/", {"order_id": self.order_id})
+        self.assertEqual(response.status_code, 400)

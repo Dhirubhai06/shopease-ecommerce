@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
+import sys
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -173,3 +174,7 @@ RAZORPAY_KEY_SECRET = os.getenv(
     "RAZORPAY_KEY_SECRET", "jmduJwZTdWtO4xzG6JB37SOp")
 
 ALLOWED_HOSTS = ["127.0.0.1", "localhost",]
+
+
+if "test" in sys.argv:
+    PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]

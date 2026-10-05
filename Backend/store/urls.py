@@ -17,7 +17,7 @@ urlpatterns = [
     path('addresses/<int:pk>/', views.delete_address),
     path('payments/create/', views.create_payment),
     path('payments/verify/', views.verify_payment),
-    path('payments/create/', views.create_payment),   
-    path('payments/verify/', views.verify_payment),   
+    path('payments/create/', views.create_payment),
+    path('payments/verify/', views.verify_payment),
+    path('orders/<int:pk>/cancel/', views.cancel_order),
 ]
-
