@@ -52,7 +52,6 @@ class Order(models.Model):
     razorpay_payment_id = models.CharField(max_length=100, blank=True)
     STATUS_CHOICES = [
         ('pending', 'Pending'),
-        ('paid', 'Paid'),
         ('shipped', 'Shipped'),
         ('delivered', 'Delivered'),
         ('cancelled', 'Cancelled'),

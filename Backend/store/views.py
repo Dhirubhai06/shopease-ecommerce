@@ -1,3 +1,4 @@
+from .order_flow import change_status, OrderTransitionError
 from django.db.models import Q
 import razorpay
 from django.conf import settings
@@ -169,9 +170,8 @@ def _create_order(request, require_checkout_details):
             order.save(update_fields=['total_amount', 'status'])
             if payment_method == 'cod':
                 send_order_confirmation(order)
-        send_order_confirmation(order)
-        serializer = OrderSerializer(order, context={'request': request})
-        return Response(serializer.data, status=201)
+            serializer = OrderSerializer(order, context={'request': request})
+            return Response(serializer.data, status=201)
     except CheckoutError as error:
         return Response({'error': str(error)}, status=400)
     except Exception:
@@ -386,30 +386,10 @@ def verify_payment(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def cancel_order(request, pk):
-    try:
-        with transaction.atomic():
-            order = Order.objects.select_for_update().get(id=pk, user=request.user)
-
-            if order.is_paid:
-                return Response(
-                    {'error': 'Paid orders cannot be cancelled here. Please contact support for a refund.'},
-                    status=400,
-                )
-            if order.status != 'pending':
-                return Response(
-                    {'error': f'Only pending orders can be cancelled (this order is {order.status}).'},
-                    status=400,
-                )
-
-            # product ke hisaab se sorted lock, taaki do cancel ek saath aaye to deadlock na ho
-            for item in order.items.order_by('product_id'):
-                product = Product.objects.select_for_update().get(id=item.product_id)
-                product.stock += item.quantity
-                product.save(update_fields=['stock'])
-
-            order.status = 'cancelled'
-            order.save(update_fields=['status'])
-    except Order.DoesNotExist:
+    if not Order.objects.filter(id=pk, user=request.user).exists():
         return Response({'error': 'Order not found'}, status=404)
-
+    try:
+        order = change_status(pk, 'cancelled')
+    except OrderTransitionError as error:
+        return Response({'error': str(error)}, status=400)
     return Response(OrderSerializer(order, context={'request': request}).data)

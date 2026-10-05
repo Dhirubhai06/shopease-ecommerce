@@ -1,3 +1,4 @@
+from django.core import mail
 from itertools import count
 from django.utils.text import slugify
 import hashlib
@@ -364,3 +365,27 @@ class CancelOrderTests(APITestCase):
         response = self.client.post(
             "/api/payments/create/", {"order_id": self.order_id})
         self.assertEqual(response.status_code, 400)
+
+# ---------- emails ----------
+
+
+class OrderEmailTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            "buyer", "b@example.com", "Pass12345")
+        self.product = make_product(stock=5)
+        login(self.client, self.user)
+
+    def place(self, method):
+        return self.client.post("/api/orders/create/", {
+            "address": "Jaipur", "phone": "9876543210", "payment_method": method,
+            "items": [{"id": self.product.id, "quantity": 1}],
+        }, format="json")
+
+    def test_cod_order_sends_exactly_one_email(self):
+        self.place("cod")
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_online_order_sends_no_email_before_payment(self):
+        self.place("upi")
+        self.assertEqual(len(mail.outbox), 0)
