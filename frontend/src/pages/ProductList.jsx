@@ -1,3 +1,4 @@
+import ProductCardSkeleton from "../components/ProductCardSkeleton";
 import { useEffect, useState } from "react";
 import ProductCard from "../components/ProductCard";
 
@@ -111,7 +112,11 @@ function ProductList() {
             {error ? (
                 <p className="text-center text-red-600 mt-10">Error: {error}</p>
             ) : loading && products.length === 0 ? (
-                <p className="text-center text-gray-600 mt-10">Loading products...</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                        <ProductCardSkeleton key={i} />
+                    ))}
+                </div>
             ) : products.length === 0 ? (
                 <div className="text-center text-gray-600 mt-10">
                     <p className="mb-3">No products found.</p>

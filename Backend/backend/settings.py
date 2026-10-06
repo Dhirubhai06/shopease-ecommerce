@@ -27,7 +27,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-b3pu&3e)liblk@v!1n6u3jwgjk_v0x9xid==lny_dk6gx7iqw2'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG =True
+DEBUG = True
 
 ALLOWED_HOSTS = []
 
@@ -131,16 +131,33 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 
-# Email
-# https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
-
 # ---------- Email ----------
-MAILERS = {
-    "default": {
-        "BACKEND": "django.core.mail.backends.console.EmailBackend",
-    },
-}
-DEFAULT_FROM_EMAIL = "ShopEase <noreply@shopease.local>"
+# https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
+GMAIL_USER = os.getenv("EMAIL_HOST_USER", "")
+GMAIL_APP_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+
+if GMAIL_USER and GMAIL_APP_PASSWORD:
+    # asli email Gmail se
+    MAILERS = {
+        "default": {
+            "BACKEND": "django.core.mail.backends.smtp.EmailBackend",
+            "OPTIONS": {
+                "host": "smtp.gmail.com",
+                "use_tls": True,
+                "username": GMAIL_USER,
+                "password": GMAIL_APP_PASSWORD,
+            },
+        },
+    }
+    DEFAULT_FROM_EMAIL = f"ShopEase <{GMAIL_USER}>"
+else:
+    # .env me credentials na ho to email terminal me print hogi
+    MAILERS = {
+        "default": {
+            "BACKEND": "django.core.mail.backends.console.EmailBackend",
+        },
+    }
+    DEFAULT_FROM_EMAIL = "ShopEase <noreply@shopease.local>"
 
 CORS_ALLOWED_ORIGINS = ['http://localhost:5173']
 

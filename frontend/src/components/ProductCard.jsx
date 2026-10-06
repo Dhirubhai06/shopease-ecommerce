@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"; // NAYA
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import HeartButton from "./HeartButton";
@@ -6,9 +6,9 @@ import HeartButton from "./HeartButton";
 function ProductCard({ product }) {
   const BASEURL = import.meta.env.VITE_DJANGO_BASE_URL || "";
   const { addToCart } = useCart();
-  const [added, setAdded] = useState(false); // NAYA
+  const [added, setAdded] = useState(false);
 
-  // NAYA: 1.5 second baad button wapas normal
+  // 1.5 second baad button wapas normal
   useEffect(() => {
     if (!added) return;
     const timer = setTimeout(() => setAdded(false), 1500);
@@ -26,18 +26,20 @@ function ProductCard({ product }) {
   const handleAddToCart = (event) => {
     event.preventDefault();
     addToCart(product);
-    setAdded(true); // NAYA
+    setAdded(true);
   };
 
   return (
-    <div className="relative bg-slate-900 rounded-xl shadow-md hover:shadow-lg transition-shadow p-4 border border-slate-800">
+    // BADLA: "product-card" jodा, "hover:shadow-lg transition-shadow" hataya
+    <div className="product-card relative bg-slate-900 rounded-xl shadow-md p-4 border border-slate-800">
       <HeartButton productId={product.id} />
 
-      <Link to={`/product/${product.id}`} className="block">
+      {/* BADLA: image ko overflow-hidden wrapper me daala, taaki zoom bahar na nikle */}
+      <Link to={`/product/${product.id}`} className="block overflow-hidden rounded-lg mb-4">
         <img
           src={getProductImageUrl(product.image)}
           alt={product.name}
-          className="w-full h-56 object-cover rounded-lg mb-4"
+          className="w-full h-56 object-cover"
         />
       </Link>
 
@@ -50,7 +52,6 @@ function ProductCard({ product }) {
       <p className="text-slate-300 text-sm line-clamp-2 mb-3">{product.description}</p>
       <div className="flex items-center justify-between gap-3">
         <p className="text-white font-semibold">₹{product.price}</p>
-        {/* BADLA: button ka colour aur text added par depend karta hai */}
         <button
           onClick={handleAddToCart}
           aria-live="polite"

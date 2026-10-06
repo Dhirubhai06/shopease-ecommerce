@@ -44,7 +44,21 @@ function ProductDetails() {
     }
   };
 
-  if (loading) return <p className="text-center mt-10">Loading...</p>;
+  if (loading) {
+    return (
+      <div className="max-w-5xl mx-auto p-6 grid md:grid-cols-2 gap-8">
+        <div className="skeleton h-96 w-full" />
+        <div>
+          <div className="skeleton h-8 w-3/4 mb-4" />
+          <div className="skeleton h-4 w-full mb-2" />
+          <div className="skeleton h-4 w-full mb-2" />
+          <div className="skeleton h-4 w-2/3 mb-6" />
+          <div className="skeleton h-8 w-32 mb-6" />
+          <div className="skeleton h-11 w-40" />
+        </div>
+      </div>
+    );
+  }
   if (error) return <p className="text-center mt-10 text-red-500">Error: {error}</p>;
   if (!product) return <p className="text-center mt-10">Product not found</p>;
 
@@ -69,7 +83,7 @@ function ProductDetails() {
         <img
           src={getProductImageUrl(product.image)}
           alt={product.name}
-          className="w-full h-96 object-cover rounded-xl shadow-md"
+          className="image-enter w-full h-96 object-cover rounded-xl shadow-md"
         />
         <div>
           <h1 className="text-3xl font-bold text-gray-800 mb-4">{product.name}</h1>

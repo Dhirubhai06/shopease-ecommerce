@@ -133,7 +133,15 @@ function Orders() {
         }
     };
     if (!token) return <Navigate to="/login" />;
-    if (loading) return <p className="text-center mt-10">Loading...</p>;
+    if (loading) {
+        return (
+            <div className="max-w-3xl mx-auto p-6 space-y-5">
+                {[1, 2, 3].map((n) => (
+                    <div key={n} className="skeleton h-44 w-full" />
+                ))}
+            </div>
+        );
+    }
     if (error) return <p className="text-center mt-10 text-red-500">{error}</p>;
 
     return (
