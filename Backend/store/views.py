@@ -1,3 +1,5 @@
+from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
+from rest_framework import serializers
 from .order_flow import change_status, OrderTransitionError
 from django.db.models import Q
 import razorpay
@@ -32,6 +34,16 @@ def home(request):
     return JsonResponse({'message': 'Welcome to the E-commerce Store!'})
 
 
+@extend_schema(
+    parameters=[
+        OpenApiParameter(
+            'search', str, description='Search in name and description'),
+        OpenApiParameter('category', int, description='Category id'),
+        OpenApiParameter('sort', str, enum=[
+                         'price_asc', 'price_desc', 'newest']),
+    ],
+    responses=ProductSerializer(many=True),
+)
 @api_view(['GET'])
 def get_products(request):
     products = Product.objects.all()
@@ -79,8 +91,12 @@ def get_categories(request):
     return Response(serializer.data)
 
 
+@extend_schema(request=RegisterSerializer, responses={201: inline_serializer(
+    name='AuthTokenResponse',
+    fields={'token': serializers.CharField(
+    ), 'username': serializers.CharField()},
+)})
 # ---------------- Auth ----------------
-
 @api_view(['POST'])
 def register(request):
     serializer = RegisterSerializer(data=request.data)
@@ -91,6 +107,16 @@ def register(request):
     return Response(serializer.errors, status=400)
 
 
+@extend_schema(
+    request=inline_serializer(name='LoginRequest', fields={
+        'username': serializers.CharField(),
+        'password': serializers.CharField(),
+    }),
+    responses={200: inline_serializer(name='LoginResponse', fields={
+        'token': serializers.CharField(),
+        'username': serializers.CharField(),
+    })},
+)
 @api_view(['POST'])
 def login(request):
     user = authenticate(
@@ -178,6 +204,19 @@ def _create_order(request, require_checkout_details):
         return Response({'error': 'Unable to complete checkout'}, status=400)
 
 
+@extend_schema(
+    request=inline_serializer(name='CreateOrderRequest', fields={
+        'address': serializers.CharField(),
+        'phone': serializers.CharField(help_text='10 digits'),
+        'payment_method': serializers.ChoiceField(choices=['cod', 'upi', 'card']),
+        'items': serializers.ListField(child=inline_serializer(
+            name='CartItemInput',
+            fields={'id': serializers.IntegerField(
+            ), 'quantity': serializers.IntegerField()},
+        )),
+    }),
+    responses={201: OrderSerializer},
+)
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_order(request):
@@ -310,6 +349,16 @@ def _razorpay_client():
     return razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
 
+@extend_schema(
+    request=inline_serializer(name='CreatePaymentRequest', fields={
+                              'order_id': serializers.IntegerField()}),
+    responses={200: inline_serializer(name='CreatePaymentResponse', fields={
+        'key': serializers.CharField(),
+        'razorpay_order_id': serializers.CharField(),
+        'amount': serializers.IntegerField(help_text='In paise'),
+        'currency': serializers.CharField(),
+    })},
+)
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_payment(request):
@@ -349,6 +398,13 @@ def create_payment(request):
     })
 
 
+@extend_schema(
+    request=inline_serializer(name='VerifyPaymentRequest', fields={
+        'razorpay_order_id': serializers.CharField(),
+        'razorpay_payment_id': serializers.CharField(),
+        'razorpay_signature': serializers.CharField(),
+    }),
+)
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def verify_payment(request):

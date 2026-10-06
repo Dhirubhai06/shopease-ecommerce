@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 urlpatterns = [
     path('products/', views.get_products),
@@ -17,7 +18,8 @@ urlpatterns = [
     path('addresses/<int:pk>/', views.delete_address),
     path('payments/create/', views.create_payment),
     path('payments/verify/', views.verify_payment),
-    path('payments/create/', views.create_payment),
-    path('payments/verify/', views.verify_payment),
     path('orders/<int:pk>/cancel/', views.cancel_order),
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'),
+         name='swagger-ui'),
 ]

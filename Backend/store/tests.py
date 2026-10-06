@@ -389,3 +389,14 @@ class OrderEmailTests(APITestCase):
     def test_online_order_sends_no_email_before_payment(self):
         self.place("upi")
         self.assertEqual(len(mail.outbox), 0)
+
+# ---------- api docs ----------
+
+class ApiDocsTests(APITestCase):
+    def test_schema_generates(self):
+        response = self.client.get("/api/schema/")
+        self.assertEqual(response.status_code, 200)
+
+    def test_swagger_page_loads(self):
+        response = self.client.get("/api/docs/")
+        self.assertEqual(response.status_code, 200)
