@@ -1,3 +1,13 @@
+from io import BytesIO
+from xml.sax.saxutils import escape
+from django.http import HttpResponse
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from rest_framework.generics import get_object_or_404
 from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
 from rest_framework import serializers
 from .order_flow import change_status, OrderTransitionError
@@ -449,3 +459,61 @@ def cancel_order(request, pk):
     except OrderTransitionError as error:
         return Response({'error': str(error)}, status=400)
     return Response(OrderSerializer(order, context={'request': request}).data)
+
+
+@extend_schema(responses={(200, 'application/pdf'): OpenApiTypes.BINARY})
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def order_invoice(request, pk):
+    # user=request.user: koi dusre ka invoice nahi dekh sakta (404 aayega)
+    order = get_object_or_404(Order, pk=pk, user=request.user)
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, title=f"Invoice #{order.id}")
+    styles = getSampleStyleSheet()
+
+    elements = [
+        Paragraph("ShopEase", styles["Title"]),
+        Paragraph(f"Invoice for Order #{order.id}", styles["Heading2"]),
+    ]
+
+    created_at = getattr(order, "created_at", None)
+    if created_at:
+        elements.append(Paragraph(
+            f"Date: {created_at.strftime('%d %b %Y, %I:%M %p')}", styles["Normal"]))
+
+    elements += [
+        Paragraph(f"Status: {escape(str(order.status))}", styles["Normal"]),
+        Paragraph(
+            f"Payment method: {escape(str(order.payment_method)).upper()}", styles["Normal"]),
+        Paragraph(f"Phone: {escape(str(order.phone))}", styles["Normal"]),
+        Paragraph(
+            f"Delivery address: {escape(str(order.shipping_address))}", styles["Normal"]),
+        Spacer(1, 20),
+    ]
+
+    # Rs. use kiya hai, kyunki PDF ke default font me ₹ ka symbol nahi hota
+    rows = [["Product", "Qty", "Price", "Total"]]
+    for item in order.items.select_related("product"):
+        line_total = item.price * item.quantity
+        rows.append([item.product.name, str(item.quantity),
+                    f"Rs. {item.price}", f"Rs. {line_total}"])
+    rows.append(["", "", "Grand total", f"Rs. {order.total_amount}"])
+
+    table = Table(rows, colWidths=[240, 50, 90, 90])
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#111827")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("GRID", (0, 0), (-1, -2), 0.5, colors.grey),
+        ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
+        ("ALIGN", (1, 0), (-1, -1), "RIGHT"),
+    ]))
+    elements.append(table)
+    elements += [Spacer(1, 30),
+                 Paragraph("Thank you for shopping with ShopEase!", styles["Normal"])]
+
+    doc.build(elements)
+
+    response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="invoice-{order.id}.pdf"'
+    return response

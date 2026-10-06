@@ -1,5 +1,4 @@
 from django.contrib import admin, messages
-
 from .models import Address, Category, Order, OrderItem, Product, Wishlist
 from .order_flow import OrderTransitionError, change_status
 
@@ -43,6 +42,7 @@ class OrderItemInline(admin.TabularInline):
 class OrderAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'total_amount',
                     'payment_method', 'is_paid', 'status', 'created_at')
+    list_editable = ('status',)
     list_filter = ('status', 'payment_method', 'is_paid')
     search_fields = ('id', 'user__username', 'phone')
     # status sirf neeche ke actions se badle, taaki rules aur stock restore bypass na ho

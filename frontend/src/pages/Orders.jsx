@@ -2,6 +2,64 @@ import { useEffect, useState } from "react";
 import { Navigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
+const STEPS = [
+    { key: "pending", label: "Placed" },
+    { key: "shipped", label: "Shipped" },
+    { key: "delivered", label: "Delivered" },
+];
+
+function OrderTimeline({ status }) {
+    if (status === "cancelled") {
+        return (
+            <p className="mt-4 text-sm text-red-600 font-medium">
+                This order was cancelled.
+            </p>
+        );
+    }
+
+    // status list me na mile to pehla step maan lo
+    const currentIndex = Math.max(
+        0,
+        STEPS.findIndex((step) => step.key === status)
+    );
+
+    return (
+        <div className="flex items-center mt-5">
+            {STEPS.map((step, i) => {
+                const done = i <= currentIndex;
+                return (
+                    <div
+                        key={step.key}
+                        className="flex items-center flex-1 last:flex-none"
+                    >
+                        <div className="flex flex-col items-center">
+                            <div
+                                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${done
+                                    ? "bg-green-600 text-white"
+                                    : "bg-gray-200 text-gray-500"
+                                    }`}
+                            >
+                                {done ? "✓" : i + 1}
+                            </div>
+                            <span
+                                className={`mt-1 text-xs ${done ? "text-green-700 font-medium" : "text-gray-500"
+                                    }`}
+                            >
+                                {step.label}
+                            </span>
+                        </div>
+                        {i < STEPS.length - 1 && (
+                            <div
+                                className={`flex-1 h-1 mx-2 mb-5 rounded ${i < currentIndex ? "bg-green-600" : "bg-gray-200"
+                                    }`}
+                            />
+                        )}
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
 const PAYMENT_LABELS = {
     cod: "Cash on delivery",
     upi: "UPI",
@@ -29,7 +87,28 @@ function Orders() {
             .catch((err) => setError(err.message))
             .finally(() => setLoading(false));
     }, [BASE_URL, token]);
-
+    const downloadInvoice = async (orderId) => {
+        try {
+            const response = await fetch(`${BASE_URL}/api/orders/${orderId}/invoice/`, {
+                headers: { Authorization: `Token ${token}` },
+            });
+            if (!response.ok) {
+                alert("Unable to download invoice");
+                return;
+            }
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `invoice-${orderId}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch {
+            alert("Something went wrong. Try again.");
+        }
+    };
     const getImageUrl = (image) => {
         if (!image) return "https://placehold.co/100x100?text=No+Image";
         if (image.startsWith("http")) return image;
@@ -94,7 +173,7 @@ function Orders() {
                             )}
                         </div>
                     </div>
-
+                    <OrderTimeline status={order.status} />
                     <ul className="mt-4 divide-y">
                         {order.items.map((item) => (
                             <li key={item.id} className="flex items-center gap-4 py-3">
@@ -120,6 +199,12 @@ function Orders() {
                         <p><span className="font-medium">Address:</span> {order.shipping_address}</p>
                         <p><span className="font-medium">Phone:</span> {order.phone}</p>
                         <p><span className="font-medium">Payment:</span> {PAYMENT_LABELS[order.payment_method] || order.payment_method}</p>
+                        <button
+                            onClick={() => downloadInvoice(order.id)}
+                            className="mt-3 mr-4 text-sm bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition"
+                        >
+                            Download Invoice
+                        </button>
                         {order.status === "pending" && !order.is_paid && (
                             <button
                                 onClick={() => handleCancel(order.id)}
