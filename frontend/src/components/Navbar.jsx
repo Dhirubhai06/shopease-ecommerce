@@ -17,8 +17,8 @@ function Navbar() {
                     {token ? (
                         <>
                             <Link to="/orders" className="text-slate-300 hover:text-white">My Orders</Link>
-                            <Link to="/profile" className="text-gray-600 hover:text-black">Hi, {username}</Link>
-                            <Link to="/wishlist" className="text-gray-700 hover:text-black">Wishlist</Link>
+                            <Link to="/profile" className="text-slate-300 hover:text-white">Hi, {username}</Link>
+                            <Link to="/wishlist" className="text-slate-300 hover:text-white">Wishlist</Link>
                             <button onClick={logoutUser} className="text-red-400 hover:text-red-300">Logout</button>
                         </>
                     ) : (

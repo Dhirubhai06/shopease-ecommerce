@@ -11,10 +11,10 @@ function ThemeToggle() {
     return (
         <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="text-gray-700 hover:text-black"
+            className="text-slate-200 hover:text-white transition"
             aria-label="Toggle theme"
         >
-            {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
+            {theme === "dark" ? "☀️" : "🌙"}
         </button>
     );
 }
