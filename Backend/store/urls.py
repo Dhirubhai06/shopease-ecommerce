@@ -23,4 +23,5 @@ urlpatterns = [
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'),
          name='swagger-ui'),
     path('orders/<int:pk>/invoice/', views.order_invoice),
+    path('ai-search/', views.ai_search),
 ]

@@ -31,7 +31,7 @@ function ProductCard({ product }) {
 
   return (
     // BADLA: "product-card" jodा, "hover:shadow-lg transition-shadow" hataya
-    <div className="product-card relative bg-slate-900 rounded-xl shadow-md p-4 border border-slate-800">
+    <div className="relative bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-4 border border-gray-300">
       <HeartButton productId={product.id} />
 
       {/* BADLA: image ko overflow-hidden wrapper me daala, taaki zoom bahar na nikle */}
@@ -44,14 +44,14 @@ function ProductCard({ product }) {
       </Link>
 
       <Link to={`/product/${product.id}`} className="block">
-        <h2 className="text-lg font-semibold text-white truncate">
+        <h2 className="text-lg font-semibold text-gray-800 truncate">
           {product.name}
         </h2>
       </Link>
 
-      <p className="text-slate-300 text-sm line-clamp-2 mb-3">{product.description}</p>
+      <p className="text-gray-600 text-sm line-clamp-2 mb-3">{product.description}</p>
       <div className="flex items-center justify-between gap-3">
-        <p className="text-white font-semibold">₹{product.price}</p>
+        <p className="text-gray-800 font-semibold">₹{product.price}</p>
         <button
           onClick={handleAddToCart}
           aria-live="polite"

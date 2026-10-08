@@ -7,6 +7,7 @@ function ProductList() {
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [chips, setChips] = useState([]);       // AI ne query se kya samjha
 
     // filters
     const [search, setSearch] = useState("");
@@ -24,40 +25,82 @@ function ProductList() {
             .catch(() => setCategories([]));
     }, [BASE_URL]);
 
-    // typing rukne ke 350ms baad hi search chale
+    // typing rukne ke 600ms baad hi search chale (AI quota bachane ke liye)
     useEffect(() => {
-        const timer = setTimeout(() => setQuery(search.trim()), 350);
+        const timer = setTimeout(() => setQuery(search.trim()), 600);
         return () => clearTimeout(timer);
     }, [search]);
 
-    // products, filters badalne par
+    // products: query ho to AI search, nahi to normal list
     useEffect(() => {
         const controller = new AbortController();
-        const params = new URLSearchParams();
-        if (query) params.set("search", query);
-        if (category) params.set("category", category);
-        if (sort) params.set("sort", sort);
+        const { signal } = controller;
 
-        setLoading(true);
-        setError(null);
+        const normalFetch = async (withSearch) => {
+            const params = new URLSearchParams();
+            if (withSearch && query) params.set("search", query);
+            if (category) params.set("category", category);
+            if (sort) params.set("sort", sort);
+            const response = await fetch(`${BASE_URL}/api/products/?${params.toString()}`, { signal });
+            if (!response.ok) throw new Error("Failed to fetch products");
+            const data = await response.json();
+            return Array.isArray(data) ? data : [];
+        };
 
-        fetch(`${BASE_URL}/api/products/?${params.toString()}`, { signal: controller.signal })
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error("Failed to fetch products");
+        const aiFetch = async () => {
+            const response = await fetch(`${BASE_URL}/api/ai-search/`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ query }),
+                signal,
+            });
+            if (!response.ok) throw new Error("AI search failed");
+            const data = await response.json();
+
+            let list = Array.isArray(data.products) ? data.products : [];
+
+            // dropdowns AI search ke upar bhi kaam karein
+            if (category) {
+                list = list.filter((p) => String(p.category?.id) === String(category));
+            }
+            if (sort === "price_asc") {
+                list = [...list].sort((a, b) => Number(a.price) - Number(b.price));
+            } else if (sort === "price_desc") {
+                list = [...list].sort((a, b) => Number(b.price) - Number(a.price));
+            } else if (sort === "newest") {
+                list = [...list].sort((a, b) => b.id - a.id);
+            }
+            return { list, understood: Array.isArray(data.understood) ? data.understood : [] };
+        };
+
+        const load = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                if (query) {
+                    try {
+                        const { list, understood } = await aiFetch();
+                        setProducts(list);
+                        setChips(understood);
+                    } catch (err) {
+                        if (err.name === "AbortError") return;
+                        // AI band / rate limit: normal keyword search chalao
+                        setChips([]);
+                        setProducts(await normalFetch(true));
+                    }
+                } else {
+                    setChips([]);
+                    setProducts(await normalFetch(false));
                 }
-                return response.json();
-            })
-            .then((data) => {
-                setProducts(Array.isArray(data) ? data : []);
                 setLoading(false);
-            })
-            .catch((err) => {
+            } catch (err) {
                 if (err.name === "AbortError") return;
                 setError(err.message);
                 setLoading(false);
-            });
+            }
+        };
 
+        load();
         return () => controller.abort();
     }, [BASE_URL, query, category, sort]);
 
@@ -67,6 +110,7 @@ function ProductList() {
         setQuery("");
         setCategory("");
         setSort("");
+        setChips([]);
     };
 
     const inputClass = "rounded-md border border-gray-300 p-2.5 text-sm";
@@ -76,12 +120,12 @@ function ProductList() {
             <h1 className="text-3xl font-bold mb-6">Our Products</h1>
 
             {/* filters: hamesha dikhte rahenge, taaki typing ke beech input band na ho */}
-            <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto] mb-6">
+            <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto] mb-3">
                 <input
                     type="search"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search products..."
+                    placeholder='Search products... (try "30000 ke neeche achha phone")'
                     aria-label="Search products"
                     className={inputClass}
                 />
@@ -108,6 +152,22 @@ function ProductList() {
                     <option value="newest">Newest first</option>
                 </select>
             </div>
+
+            {/* AI ne kya samjha: chips */}
+            {chips.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 mb-6">
+                    <span className="text-sm text-gray-500">Understood:</span>
+                    {chips.map((chip) => (
+                        <span
+                            key={chip}
+                            className="px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-sm"
+                        >
+                            {chip}
+                        </span>
+                    ))}
+                </div>
+            )}
+            {chips.length === 0 && <div className="mb-3" />}
 
             {error ? (
                 <p className="text-center text-red-600 mt-10">Error: {error}</p>

@@ -1,32 +1,3 @@
-from io import BytesIO
-from xml.sax.saxutils import escape
-from django.http import HttpResponse
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
-from rest_framework.generics import get_object_or_404
-from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
-from rest_framework import serializers
-from .order_flow import change_status, OrderTransitionError
-from django.db.models import Q
-import razorpay
-from django.conf import settings
-from .emails import send_order_confirmation
-from django.contrib.auth.models import User
-from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
-from decimal import Decimal
-from django.contrib.auth import authenticate
-from django.http import JsonResponse
-from django.db import transaction
-from rest_framework.authtoken.models import Token
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from .models import Address, Product, Category, Order, OrderItem, Wishlist, Address
 from .serializers import (
     ProductSerializer,
     CategorySerializer,
@@ -34,6 +5,40 @@ from .serializers import (
     RegisterSerializer,
     AddressSerializer,
 )
+from .models import Address, Product, Category, Order, OrderItem, Wishlist, Address
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.authtoken.models import Token
+from django.db import transaction
+from django.http import JsonResponse
+from django.contrib.auth import authenticate
+from decimal import Decimal
+from django.core.exceptions import ValidationError
+from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.models import User
+from .emails import send_order_confirmation
+from django.conf import settings
+import razorpay
+from django.db.models import Q
+from .order_flow import change_status, OrderTransitionError
+from rest_framework import serializers
+from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
+from rest_framework.generics import get_object_or_404
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from drf_spectacular.utils import extend_schema
+from drf_spectacular.types import OpenApiTypes
+from django.http import HttpResponse
+from xml.sax.saxutils import escape
+from io import BytesIO
+import logging
+from rest_framework.decorators import throttle_classes
+from rest_framework.throttling import SimpleRateThrottle
+from .ai_search import describe, parse_query, run_search, fallback_filters
+logger = logging.getLogger(__name__)
 
 
 class CheckoutError(Exception):
@@ -517,3 +522,46 @@ def order_invoice(request, pk):
     response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="invoice-{order.id}.pdf"'
     return response
+
+
+class AISearchThrottle(SimpleRateThrottle):
+    """Free API quota bachane ke liye: ek IP se 20 requests/minute."""
+    scope = "ai_search"
+
+    def get_rate(self):
+        return "20/min"
+
+    def get_cache_key(self, request, view):
+        return self.cache_format % {"scope": self.scope, "ident": self.get_ident(request)}
+
+
+@extend_schema(
+    request=inline_serializer(
+        name="AISearchRequest",
+        fields={"query": serializers.CharField(max_length=200)},
+    ),
+    responses={200: OpenApiTypes.OBJECT},
+)
+@api_view(['POST'])
+@throttle_classes([AISearchThrottle])
+def ai_search(request):
+    query = str(request.data.get('query', '')).strip()[:200]
+    if not query:
+        return Response({'error': 'Query is required'}, status=400)
+
+    ai_used = True
+    try:
+        filters = parse_query(query)
+    except Exception as e:
+        # Key nahi, galat model, internet nahi, rate limit ya galat JSON
+        logger.exception("AI search failed, using fallback filters")
+        print("AI SEARCH ERROR:", repr(e))
+        filters = fallback_filters(query)
+        ai_used = False
+
+    products = run_search(filters)
+    return Response({
+        'ai_used': ai_used,
+        'understood': describe(filters),
+        'products': ProductSerializer(products, many=True, context={'request': request}).data,
+    })
