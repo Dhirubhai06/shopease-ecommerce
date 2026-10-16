@@ -248,7 +248,7 @@ textarea:focus {
 }
 
 .skeleton {
-    background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
+    background: linear-gradient(90deg, var(--skeleton-a) 25%, var(--skeleton-b) 50%, var(--skeleton-a) 75%);
     background-size: 800px 100%;
     animation: shimmer 1.4s infinite linear;
     border-radius: 0.5rem;
@@ -258,4 +258,74 @@ textarea:focus {
     .skeleton {
         animation: none;
     }
+}
+
+html.dark .hover\:shadow-xl:hover {
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.7);
+}
+
+/* ---------- Theme colours (light default, dark me badal jate hain) ---------- */
+:root {
+    --card-bg: #ffffff;
+    --card-border: #e5e7eb;
+    --card-title: #111827;
+    --card-text: #4b5563;
+    --skeleton-a: #e5e7eb;
+    --skeleton-b: #f3f4f6;
+}
+
+html.dark,
+html[data-theme="dark"],
+body.dark,
+body[data-theme="dark"] {
+    --card-bg: #141414;
+    --card-border: #2b2b2b;
+    --card-title: #ffffff;
+    --card-text: #cbd5e1;
+    --skeleton-a: #1a1a1a;
+    --skeleton-b: #2a2a2a;
+}
+
+.product-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+}
+
+.card-title {
+    color: var(--card-title);
+}
+
+.card-text {
+    color: var(--card-text);
+}
+
+/* ============ FONTS ============ */
+:root {
+  --font-sans: "Inter Tight", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+}
+
+/* Bade headings: patle aur thode tight */
+.heading-light {
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+/* Chhote capital labels: monospace aur wide spacing */
+.label-mono {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.75rem;
+  font-weight: 500;
 }

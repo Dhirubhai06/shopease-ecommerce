@@ -1,6 +1,9 @@
 function ProductCardSkeleton() {
     return (
-        <div className="bg-slate-900 rounded-xl shadow-md p-4 border border-slate-800">
+        <div
+            className="rounded-xl shadow-md p-4 border"
+            style={{ background: "var(--card-bg)", borderColor: "var(--card-border)" }}
+        >
             <div className="skeleton h-56 w-full mb-4" />
             <div className="skeleton h-5 w-3/4 mb-3" />
             <div className="skeleton h-3 w-full mb-2" />
