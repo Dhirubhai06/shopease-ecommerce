@@ -117,8 +117,7 @@ function ProductList() {
 
     return (
         <div className="container mx-auto p-4">
-            <h1 className="text-3xl font-bold mb-6">Our Products</h1>
-
+            <h1 className="heading-light text-5xl mb-6">Our Products</h1>
             {/* filters: hamesha dikhte rahenge, taaki typing ke beech input band na ho */}
             <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto] mb-3">
                 <input

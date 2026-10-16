@@ -10,6 +10,7 @@ function ProductDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [added, setAdded] = useState(false);
+
   const getProductImageUrl = (image) => {
     if (!image) return "https://placehold.co/600x400?text=No+Image";
     if (image.startsWith("http://") || image.startsWith("https://")) return image;
@@ -37,11 +38,10 @@ function ProductDetails() {
   }, [BASEURL, id]);
 
   const handleAddToCart = () => {
-    if (product) {
-      addToCart(product);
-      setAdded(true);
-      setTimeout(() => setAdded(false), 1500);
-    }
+    if (!product || added) return;
+    addToCart(product);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1500);
   };
 
   if (loading) {
@@ -91,7 +91,8 @@ function ProductDetails() {
           <p className="text-2xl font-semibold text-gray-800 mb-6">₹{product.price}</p>
           <button
             onClick={handleAddToCart}
-            className={`px-6 py-2 rounded-lg text-white transition ${added ? "bg-green-600" : "bg-blue-600 hover:bg-blue-700"
+            disabled={added}
+            className={`px-6 py-2 rounded-lg text-white transition ${added ? "bg-green-600 cursor-default" : "bg-blue-600 hover:bg-blue-700"
               }`}
           >
             {added ? "Added ✓" : "Add to Cart"}
