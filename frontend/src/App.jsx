@@ -8,6 +8,7 @@ import Orders from "./pages/Orders";
 import Checkout from "./pages/Checkout";
 import Profile from "./pages/Profile";
 import Wishlist from "./pages/Wishlist";
+import SmokyBackground from "./components/SmokyBackground";
 function PageWrapper({ children }) {
   const location = useLocation();
   return (
@@ -19,6 +20,7 @@ function PageWrapper({ children }) {
 function App() {
   return (
     <Router>
+      <SmokyBackground />
       <Navbar />
       <PageWrapper>
         <Routes>

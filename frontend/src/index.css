@@ -1,11 +1,65 @@
 @import "tailwindcss";
 
-/* ---------- Dark theme ---------- */
-html.dark body {
-    background-color: #0f172a;
-    color: #e5e7eb;
+/* ============ THEME VARIABLES (ek jagah, light default) ============ */
+:root {
+    --accent: #ff1e3c;
+    /* candy red */
+    --accent-hover: #d6112d;
+
+    --page-bg: #f5f5f5;
+    --page-text: #111111;
+
+    --card-bg: rgba(255, 255, 255, 0.72);
+    --card-border: #e5e7eb;
+    --card-title: #111827;
+    --card-text: #4b5563;
+
+    --skeleton-a: #e5e7eb;
+    --skeleton-b: #f3f4f6;
+
+    --font-sans: "Inter Tight", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
 }
 
+/* Dark mode: toggle jo bhi tareeka use kare, in me se ek match ho jayega */
+html.dark,
+html[data-theme="dark"],
+body.dark,
+body[data-theme="dark"] {
+    --page-bg: #0a0a0a;
+    --page-text: #f5f5f5;
+
+    --card-bg: rgba(20, 20, 20, 0.68);
+    --card-border: #2b2b2b;
+    --card-title: #ffffff;
+    --card-text: #cbd5e1;
+
+    --skeleton-a: #1a1a1a;
+    --skeleton-b: #2a2a2a;
+}
+
+/* ============ BASE ============ */
+/* Background html par, body transparent: tabhi peeche ka smoky canvas dikhta hai */
+html {
+    background: var(--page-bg);
+}
+
+body {
+    margin: 0;
+    background: transparent;
+    color: var(--page-text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+    font-family: inherit;
+}
+
+/* ============ DARK MODE OVERRIDES (tumhare purane) ============ */
 /* backgrounds */
 html.dark .bg-white {
     background-color: #1e293b;
@@ -35,6 +89,14 @@ html.dark .bg-yellow-100 {
     background-color: #713f12;
 }
 
+html.dark .bg-red-100 {
+    background-color: #7f1d1d;
+}
+
+html.dark .bg-green-100 {
+    background-color: #14532d;
+}
+
 /* text */
 html.dark .text-gray-900,
 html.dark .text-gray-800 {
@@ -59,6 +121,14 @@ html.dark .text-green-700 {
 
 html.dark .text-yellow-800 {
     color: #fde68a;
+}
+
+html.dark .text-red-800 {
+    color: #fecaca;
+}
+
+html.dark .text-green-800 {
+    color: #bbf7d0;
 }
 
 html.dark .hover\:text-black:hover {
@@ -89,53 +159,16 @@ html.dark ::placeholder {
     color: #94a3b8;
 }
 
-/* cards ka shadow dark me halka rahe */
+/* shadows dark me */
 html.dark .shadow-md {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
-html.dark .bg-red-100 {
-    background-color: #7f1d1d;
+html.dark .hover\:shadow-xl:hover {
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.7);
 }
 
-html.dark .text-red-800 {
-    color: #fecaca;
-}
-
-html.dark .bg-green-100 {
-    background-color: #14532d;
-}
-
-html.dark .text-green-800 {
-    color: #bbf7d0;
-}
-
-:root {
-    --bg: #0a0a0a;
-    /* deep black */
-    --surface: #141414;
-    /* cards, navbar */
-    --border: #2b2b2b;
-    --accent: #ff1e3c;
-    /* candy red */
-    --accent-hover: #d6112d;
-}
-
-/* Light mode */
-body {
-    background: #f5f5f5;
-    color: #111111;
-}
-
-/* Dark mode: toggle jo bhi tareeka use kare, in me se ek match ho jayega */
-html.dark body,
-html[data-theme="dark"] body,
-body.dark,
-body[data-theme="dark"] {
-    background: #0a0a0a;
-    color: #f5f5f5;
-}
-
+/* ============ CANDY RED ACCENT ============ */
 /* Blue buttons aur links -> candy red */
 .bg-blue-600 {
     background-color: var(--accent) !important;
@@ -151,7 +184,6 @@ body[data-theme="dark"] {
     color: var(--accent) !important;
 }
 
-/* Red glow button par */
 .bg-blue-600:hover {
     box-shadow: 0 0 14px rgba(255, 30, 60, 0.55);
 }
@@ -165,15 +197,19 @@ textarea:focus {
     box-shadow: 0 0 0 2px rgba(255, 30, 60, 0.35);
 }
 
-/* ---------- Product card ---------- */
+/* ============ PRODUCT CARD ============ */
 .product-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
     transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
     will-change: transform;
 }
 
 .product-card:hover {
     transform: translateY(-6px);
-    border-color: #ff1e3c;
+    border-color: var(--accent);
     box-shadow: 0 12px 28px rgba(255, 30, 60, 0.25);
 }
 
@@ -190,7 +226,15 @@ textarea:focus {
     transform: scale(1.06);
 }
 
-/* ---------- Page transition ---------- */
+.card-title {
+    color: var(--card-title);
+}
+
+.card-text {
+    color: var(--card-text);
+}
+
+/* ============ PAGE TRANSITION ============ */
 @keyframes pageEnter {
     from {
         opacity: 0;
@@ -207,7 +251,7 @@ textarea:focus {
     animation: pageEnter 0.35s ease-out;
 }
 
-/* ---------- Details page image zoom-in ---------- */
+/* Details page image zoom-in */
 @keyframes imageEnter {
     from {
         opacity: 0;
@@ -224,19 +268,7 @@ textarea:focus {
     animation: imageEnter 0.5s ease-out;
 }
 
-/* Jinko animation pasand nahi (accessibility) unke liye band */
-@media (prefers-reduced-motion: reduce) {
-
-    .product-card,
-    .product-card img,
-    .page-enter,
-    .image-enter {
-        animation: none;
-        transition: none;
-    }
-}
-
-/* ---------- Skeleton loader ---------- */
+/* ============ SKELETON LOADER ============ */
 @keyframes shimmer {
     0% {
         background-position: -400px 0;
@@ -254,78 +286,53 @@ textarea:focus {
     border-radius: 0.5rem;
 }
 
+/* Jinko animation pasand nahi (accessibility) unke liye band */
 @media (prefers-reduced-motion: reduce) {
+
+    .product-card,
+    .product-card img,
+    .page-enter,
+    .image-enter,
     .skeleton {
         animation: none;
+        transition: none;
     }
 }
 
-html.dark .hover\:shadow-xl:hover {
-    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.7);
-}
-
-/* ---------- Theme colours (light default, dark me badal jate hain) ---------- */
-:root {
-    --card-bg: #ffffff;
-    --card-border: #e5e7eb;
-    --card-title: #111827;
-    --card-text: #4b5563;
-    --skeleton-a: #e5e7eb;
-    --skeleton-b: #f3f4f6;
-}
-
-html.dark,
-html[data-theme="dark"],
-body.dark,
-body[data-theme="dark"] {
-    --card-bg: #141414;
-    --card-border: #2b2b2b;
-    --card-title: #ffffff;
-    --card-text: #cbd5e1;
-    --skeleton-a: #1a1a1a;
-    --skeleton-b: #2a2a2a;
-}
-
-.product-card {
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
-}
-
-.card-title {
-    color: var(--card-title);
-}
-
-.card-text {
-    color: var(--card-text);
-}
-
 /* ============ FONTS ============ */
-:root {
-  --font-sans: "Inter Tight", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
-}
-
-body {
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-}
-
-button, input, select, textarea {
-  font-family: inherit;
-}
-
 /* Bade headings: patle aur thode tight */
 .heading-light {
-  font-weight: 300;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
+    font-weight: 300;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
 }
 
 /* Chhote capital labels: monospace aur wide spacing */
 .label-mono {
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-size: 0.75rem;
-  font-weight: 500;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* ============ SMOKY BACKGROUND ============ */
+.smoke-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* Halka grain, jisse dhuan asli lagta hai */
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.07;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
